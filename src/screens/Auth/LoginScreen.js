@@ -51,6 +51,7 @@ const LoginScreen = () => {
   // Form state
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState('Admin');
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   
   // Form hook setup
   const {
@@ -68,7 +69,7 @@ const LoginScreen = () => {
   });
 
   // Role options for dropdown
-  const roleOptions = ['Admin', 'User', 'Manager', 'Viewer'];
+  const roleOptions = ['Admin', 'Client', 'Employee'];
 
   // Clear error when component mounts
   useEffect(() => {
@@ -108,14 +109,63 @@ const LoginScreen = () => {
     Alert.alert('Sign Up', 'This feature will be implemented soon.');
   };
 
+  // Close dropdown when clicking outside
+  const handleOutsideClick = () => {
+    if (showRoleDropdown) {
+      setShowRoleDropdown(false);
+    }
+  };
+
+  // Handle dropdown toggle
+  const handleDropdownToggle = () => {
+    setShowRoleDropdown(!showRoleDropdown);
+  };
+
+  // Handle role selection
+  const handleRoleSelection = (role) => {
+    setSelectedRole(role);
+    setValue('role', role);
+    setShowRoleDropdown(false);
+  };
+
   // Render role dropdown
   const renderRoleDropdown = () => (
     <View style={styles.dropdownContainer}>
       <Text style={styles.label}>Role</Text>
-      <View style={styles.dropdown}>
+      <TouchableOpacity
+        style={[styles.dropdown, showRoleDropdown && styles.dropdownActive]}
+        onPress={handleDropdownToggle}
+        activeOpacity={0.7}
+      >
         <Text style={styles.dropdownText}>{selectedRole}</Text>
-        <Text style={styles.dropdownIcon}>▼</Text>
-      </View>
+        <Text style={styles.dropdownIcon}>{showRoleDropdown ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
+      
+      {showRoleDropdown && (
+        <View style={styles.dropdownOptions}>
+          {roleOptions.map((role) => (
+            <TouchableOpacity
+              key={role}
+              style={[
+                styles.dropdownOption,
+                selectedRole === role && styles.dropdownOptionSelected
+              ]}
+              onPress={() => handleRoleSelection(role)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.dropdownOptionText,
+                selectedRole === role && styles.dropdownOptionTextSelected
+              ]}>
+                {role}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      
+
+      
       {errors.role && (
         <Text style={styles.errorText}>{errors.role.message}</Text>
       )}
@@ -177,15 +227,11 @@ const LoginScreen = () => {
           
           {/* AJAS Services Logo */}
           <View style={styles.ajasLogoContainer}>
-            <View style={styles.ajasLogo}>
-              {/* TODO: Replace with actual AJAS Services logo SVG */}
-              <View style={styles.ajasLogoIcon}>
-                <View style={[styles.ajasLogoCircle, { backgroundColor: colors.ajasGreen }]} />
-                <View style={[styles.ajasLogoCircle, { backgroundColor: colors.ajasBlue }]} />
-                <View style={[styles.ajasLogoCircle, { backgroundColor: colors.ajasBlue }]} />
-              </View>
-              <Text style={styles.ajasLogoText}>AJAS Services</Text>
-            </View>
+            <Image
+              source={require('../../assets/images/ajas-logo.png')}
+              style={styles.ajasLogoImage}
+              resizeMode="contain"
+            />
           </View>
         </View>
 
@@ -193,7 +239,11 @@ const LoginScreen = () => {
         <View style={styles.formContainer}>
           {/* Fazlani Logo */}
           <View style={styles.fazlaniLogoContainer}>
-            <Text style={styles.fazlaniLogo}>Fazlani</Text>
+            <Image
+              source={require('../../assets/images/Fazlani-logo.png')}
+              style={styles.fazlaniLogoImage}
+              resizeMode="contain"
+            />
             <View style={styles.taglineContainer}>
               <Text style={styles.tagline}>One with the world</Text>
             </View>
@@ -288,6 +338,13 @@ const styles = {
     flex: 1,
     backgroundColor: colors.background,
   },
+  overlay: {
+    flex: 1,
+  },
+  dropdownActive: {
+    borderColor: colors.primaryBlue,
+    borderWidth: 2,
+  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -321,24 +378,9 @@ const styles = {
     bottom: spacing.xl,
     right: spacing.xl,
   },
-  ajasLogo: {
-    alignItems: 'center',
-  },
-  ajasLogoIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  ajasLogoCircle: {
-    width: moderateScale(12),
-    height: moderateScale(12),
-    borderRadius: moderateScale(6),
-    marginHorizontal: moderateScale(2),
-  },
-  ajasLogoText: {
-    fontSize: typography.sizes.small,
-    color: colors.white,
-    fontFamily: typography.fonts.medium,
+  ajasLogoImage: {
+    width: moderateScale(120),
+    height: moderateScale(60),
   },
   formContainer: {
     width: '50%',
@@ -346,6 +388,7 @@ const styles = {
     paddingVertical: spacing.xxl,
     backgroundColor: colors.white,
     justifyContent: 'center',
+    minHeight: '100%',
   },
   fazlaniLogoContainer: {
     alignItems: 'center',
@@ -356,6 +399,11 @@ const styles = {
     color: colors.primaryOrange,
     fontFamily: typography.fonts.script,
     fontWeight: typography.weights.bold,
+  },
+  fazlaniLogoImage: {
+    width: moderateScale(200),
+    height: moderateScale(80),
+    marginBottom: spacing.sm,
   },
   taglineContainer: {
     backgroundColor: colors.primaryOrange,
@@ -387,9 +435,10 @@ const styles = {
   },
   form: {
     width: '100%',
+    marginTop: spacing.lg,
   },
   inputContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   label: {
     fontSize: typography.sizes.label,
@@ -422,6 +471,8 @@ const styles = {
   },
   dropdownContainer: {
     marginBottom: spacing.lg,
+    position: 'relative',
+    zIndex: 1000,
   },
   dropdown: {
     flexDirection: 'row',
@@ -443,10 +494,52 @@ const styles = {
     fontSize: typography.sizes.small,
     color: colors.lightGrey,
   },
+  dropdownOptions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.lightGrey,
+    borderRadius: borderRadius.medium,
+    marginTop: 2,
+    shadowColor: colors.darkText,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 10,
+    zIndex: 10000,
+  },
+  dropdownOption: {
+    paddingHorizontal: spacing.inputPadding,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGrey + '30',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: colors.primaryBlue + '10',
+  },
+  dropdownOptionText: {
+    fontSize: typography.sizes.body,
+    color: colors.darkText,
+    fontFamily: typography.fonts.regular,
+  },
+  dropdownOptionTextSelected: {
+    color: colors.primaryBlue,
+    fontFamily: typography.fonts.medium,
+  },
+  debugText: {
+    fontSize: typography.sizes.small,
+    color: colors.error,
+    fontFamily: typography.fonts.regular,
+    marginTop: spacing.sm,
+  },
   loginButton: {
     ...commonStyles.button.primary,
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.lg,
+    width: '100%',
   },
   loginButtonDisabled: {
     opacity: 0.6,

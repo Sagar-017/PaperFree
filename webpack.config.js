@@ -16,6 +16,7 @@ module.exports = async function (env, argv) {
     https: require.resolve('https-browserify'),
     os: require.resolve('os-browserify/browser'),
     url: require.resolve('url'),
+    vm: false, // Disable vm module for browser
   };
 
   // Add plugins for polyfills
